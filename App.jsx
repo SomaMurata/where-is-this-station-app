@@ -1,6 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet, Text, View, TouchableOpacity,
+} from 'react-native';
 import * as Location from 'expo-location';
 
 // import getLogation from './src/components/getLocation';
@@ -8,18 +10,32 @@ import * as Location from 'expo-location';
 export default function App() {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+
+  const [X, setX] = useState('35.68122310805687');
+  const [Y, setY] = useState('139.76715027872547');
+
+  const URL = `http://express.heartrails.com/api/json?method=getStations&x=${X}.0&y=${Y}&jsonp=string`;
+
+  useEffect(() => {
+    function getStations() {
+      fetch(URL);
+    }
+    getStations();
+    const getStation = getStations();
+    console.log(getStation, 'test');
+  }, []);
+
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setErrorMsg('Permission to access location was denied');
         return;
       }
 
-      let Location = await Location.getCurrentPositionAsync({});
-      let longitude = JSON.stringify(Location.coords.longitude);
+      const nowlogation = await Location.getCurrentPositionAsync({});
 
-      setLocation(longitude);
+      setLocation(nowlogation);
     })();
   }, []);
 
@@ -35,7 +51,7 @@ export default function App() {
   getLocation();
 
   const [station, setStation] = useState('○△□駅');
-  function getStation() {
+  function handlePress() {
     const now = getLocation();
     console.log(now);
     setStation('小机駅');
@@ -52,7 +68,7 @@ export default function App() {
       </View>
       <TouchableOpacity
         style={styles.searchButton}
-        onPress={() => getStation()}
+        onPress={() => handlePress()}
       >
         <Text style={styles.seachText}>調べる</Text>
       </TouchableOpacity>

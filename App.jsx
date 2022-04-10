@@ -1,9 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet, Text, View, TouchableOpacity,
-} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
+import { Alert } from 'react-native-web';
 
 // import getLogation from './src/components/getLocation';
 
@@ -13,16 +12,23 @@ export default function App() {
 
   const [X, setX] = useState('35.68122310805687');
   const [Y, setY] = useState('139.76715027872547');
+  const [station, setStation] = useState(null);
+  const [posts, setPosts] = useState([]);
 
-  const URL = `http://express.heartrails.com/api/json?method=getStations&x=${X}.0&y=${Y}&jsonp=string`;
+  // const URL = `http://express.heartrails.com/api/json?method=getStations&x=${X}.0&y=${Y}&jsonp=string`;
+  const URL = 'https://jsonplaceholder.typicode.com/posts';
 
   useEffect(() => {
     function getStations() {
-      fetch(URL);
+      fetch(URL)
+        .then((res) => res.json())
+        .then((data) => {
+          setPosts(data);
+        })
+        .catch((error) => Alert.alert(error));
     }
-    getStations();
-    const getStation = getStations();
-    console.log(getStation, 'test');
+    const station = getStations();
+    console.log(posts.map);
   }, []);
 
   useEffect(() => {
@@ -50,7 +56,6 @@ export default function App() {
   }
   getLocation();
 
-  const [station, setStation] = useState('○△□駅');
   function handlePress() {
     const now = getLocation();
     console.log(now);

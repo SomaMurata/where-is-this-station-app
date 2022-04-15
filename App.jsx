@@ -1,36 +1,21 @@
-import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import {
+  StyleSheet, Text, View, TouchableOpacity,
+} from 'react-native';
 import * as Location from 'expo-location';
-import { Alert } from 'react-native-web';
-
-// import getLogation from './src/components/getLocation';
+import axios from 'axios';
 
 export default function App() {
-  const [location, setLocation] = useState(null);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const [station, setStation] = useState('○△□駅');
+  /* eslint-disable-next-line */
   const [errorMsg, setErrorMsg] = useState(null);
 
-  const [X, setX] = useState('35.68122310805687');
-  const [Y, setY] = useState('139.76715027872547');
-  const [station, setStation] = useState(null);
-  const [posts, setPosts] = useState([]);
+  const stationURL = 'http://express.heartrails.com/api/json?method=getStations';
 
-  // const URL = `http://express.heartrails.com/api/json?method=getStations&x=${X}.0&y=${Y}&jsonp=string`;
-  const URL = 'https://jsonplaceholder.typicode.com/posts';
-
-  useEffect(() => {
-    function getStations() {
-      fetch(URL)
-        .then((res) => res.json())
-        .then((data) => {
-          setPosts(data);
-        })
-        .catch((error) => Alert.alert(error));
-    }
-    const station = getStations();
-    console.log(posts.map);
-  }, []);
-
+  // 緯度経度取得
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -39,43 +24,41 @@ export default function App() {
         return;
       }
 
-      const nowlogation = await Location.getCurrentPositionAsync({});
-
-      setLocation(nowlogation);
+      const nowlocation = await Location.getCurrentPositionAsync({});
+      setLatitude(JSON.stringify(nowlocation.coords.latitude));
+      setLongitude(JSON.stringify(nowlocation.coords.longitude));
     })();
   }, []);
 
-  function getLocation() {
-    let text = 'Waiting..';
-    if (errorMsg) {
-      text = errorMsg;
-    } else if (location) {
-      text = JSON.stringify(location);
+  // 緯度経度情報からAPIで駅を取得
+  const getStation = async () => {
+    try {
+      const lat = latitude;
+      const lon = longitude;
+      const response = await axios.get(
+        `${stationURL}&x=${lon}&y=${lat}`,
+      );
+      const { data } = response;
+      return data.response.station[0].name;
+    } catch (error) {
+      return '駅情報取得に失敗しました。';
     }
-    return <Text>{text}</Text>;
-  }
-  getLocation();
-
-  function handlePress() {
-    const now = getLocation();
-    console.log(now);
-    setStation('小机駅');
+  };
+  // 現在地の駅を取得
+  async function handlePress() {
+    const currentStation = await getStation();
+    setStation(`${currentStation}駅`);
   }
 
-  const thisStation = station;
   return (
     <View style={styles.container}>
-      <View style={styles.apptitle}>
-        <Text style={styles.titletext}>ココなに駅？？</Text>
+      <View style={styles.textcont}>
+        <Text style={styles.maintitle}>ココ今何駅？</Text>
+        <Text style={styles.temp}>{station}</Text>
       </View>
-      <View style={styles.stationbox}>
-        <Text style={styles.stationname}>{thisStation}</Text>
-      </View>
-      <TouchableOpacity
-        style={styles.searchButton}
-        onPress={() => handlePress()}
-      >
-        <Text style={styles.seachText}>調べる</Text>
+      {/* eslint-disable-next-line */}
+      <TouchableOpacity style={styles.button} onPress={handlePress}>
+        <Text style={styles.buttonText}>調べる</Text>
       </TouchableOpacity>
       {/* eslint-disable-next-line */}
       <StatusBar style="auto" />
@@ -90,30 +73,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  apptitle: {
-    marginBottom: 40,
-  },
-  titletext: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  stationbox: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  textcont: {
     marginBottom: 80,
   },
-  stationname: {
-    fontSize: 32,
+  maintitle: {
+    fontSize: 24,
+    marginBottom: 40,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
-  searchButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: 'green',
-  },
-  seachText: {
-    color: '#ffffff',
+  temp: {
     fontSize: 24,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  button: {
+    paddingVertical: 24,
+    width: '60%',
+    backgroundColor: 'green',
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
